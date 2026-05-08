@@ -151,6 +151,29 @@
   /* ---- offscreen render container ---- */
   #offscreen { position: fixed; left: -9999px; top: 0; z-index: -1; }
 
+  /* ---- 长按保存弹窗 ---- */
+  .save-modal {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,0.82);
+    flex-direction: column; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .save-modal.active { display: flex; }
+  .save-modal .hint {
+    color: #fff; font-size: 16px; margin-bottom: 14px;
+    text-align: center; letter-spacing: .06em; line-height: 1.6;
+  }
+  .save-modal img {
+    max-width: 92vw; max-height: 72vh;
+    border-radius: 6px; box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+  .save-modal .close-btn {
+    margin-top: 18px; padding: 10px 36px;
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    color: #fff; font-size: 15px; border-radius: 6px; cursor: pointer;
+    letter-spacing: .1em;
+  }
+
   /* ---- 响应式 ---- */
   @media (max-width: 1200px) {
     .app { flex-direction: column; }
@@ -246,6 +269,11 @@
 </div>
 
 <div id="offscreen"></div>
+<div class="save-modal" id="save-modal">
+  <div class="hint">长按下方图片保存到相册</div>
+  <img id="save-modal-img" src="">
+  <button class="close-btn" id="save-modal-close">关闭</button>
+</div>
 
 <script>
 const REGIONS = {
@@ -343,17 +371,27 @@ btnDownload.addEventListener('click', async () => {
 
     offscreen.removeChild(clone);
 
-    canvas.toBlob(function(blob) {
-      if (!blob) { alert('生成失败，请重试'); return; }
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.download = `邀请函-${name}.png`;
-      link.href = url;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
-    }, 'image/png');
+    const dataURL = canvas.toDataURL('image/png');
+
+    if (isMobile) {
+      // Mobile: show modal for long-press save
+      const modal = document.getElementById('save-modal');
+      document.getElementById('save-modal-img').src = dataURL;
+      modal.classList.add('active');
+    } else {
+      // Desktop: direct download via blob
+      canvas.toBlob(function(blob) {
+        if (!blob) { alert('生成失败，请重试'); return; }
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `邀请函-${name}.png`;
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+      }, 'image/png');
+    }
   } catch (e) {
     alert('生成失败，请重试');
     console.error(e);
@@ -361,6 +399,13 @@ btnDownload.addEventListener('click', async () => {
 
   btnDownload.disabled = false;
   btnDownload.innerHTML = DL_SVG + ' 下载邀请函';
+});
+
+document.getElementById('save-modal-close').addEventListener('click', function() {
+  document.getElementById('save-modal').classList.remove('active');
+});
+document.getElementById('save-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('active');
 });
 
 update();
