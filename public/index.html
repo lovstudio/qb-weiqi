@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第七届"校友京华杯"围棋友谊赛 · 邀请函生成</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;700;900&family=Noto+Sans+SC:wght@400;500&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { font-family: 'Noto Sans SC', -apple-system, sans-serif; background: #f5f3ef; color: #181818; }
+
+  .app { display: flex; min-height: 100vh; }
+
+  /* ---- 左侧表单 ---- */
+  .sidebar {
+    width: 380px; flex-shrink: 0;
+    background: #fff; border-right: 1px solid #e8e4de;
+    padding: 48px 36px; display: flex; flex-direction: column; gap: 32px;
+  }
+  .sidebar h1 {
+    font-family: 'Noto Serif SC'; font-size: 24px; font-weight: 700;
+    color: #CC3B26; letter-spacing: .08em; line-height: 1.5;
+  }
+  .sidebar h1 small {
+    display: block; font-size: 13px; color: #6B4F3A;
+    font-family: 'Noto Sans SC'; font-weight: 400; letter-spacing: .04em; margin-top: 4px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-group label {
+    font-size: 14px; font-weight: 500; color: #6B4F3A; letter-spacing: .06em;
+  }
+  .form-group input, .form-group select {
+    font-family: 'Noto Sans SC'; font-size: 18px; padding: 12px 16px;
+    border: 1px solid #d4cfc7; border-radius: 6px; background: #faf9f7;
+    color: #181818; outline: none; transition: border-color .2s;
+  }
+  .form-group input:focus, .form-group select:focus {
+    border-color: #CC3B26;
+  }
+  .form-group input::placeholder { color: #b0a89e; }
+
+  .btn-download {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: 'Noto Sans SC'; font-size: 16px; font-weight: 500;
+    padding: 14px 28px; border: none; border-radius: 8px; cursor: pointer;
+    background: #CC3B26; color: #fff; letter-spacing: .08em;
+    transition: background .2s;
+  }
+  .btn-download:hover { background: #B8351F; }
+  .btn-download:disabled { background: #ccc; cursor: not-allowed; }
+  .btn-download svg { width: 18px; height: 18px; }
+
+  .footer-note {
+    margin-top: auto; font-size: 12px; color: #a09890; line-height: 1.6;
+  }
+
+  /* ---- 右侧预览 ---- */
+  .preview-area {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 40px; overflow: auto;
+  }
+  .preview-wrapper {
+    transform-origin: top center;
+    box-shadow: 0 8px 40px rgba(0,0,0,.12);
+    border-radius: 4px; overflow: hidden;
+  }
+
+  /* ---- 邀请函卡片（与 Playwright 渲染一致） ---- */
+  .inv { width: 900px; height: 1273px; position: relative; overflow: hidden; font-family: 'Noto Serif SC', serif; }
+  .inv .bg {
+    position: absolute; inset: 0;
+    background: url('bg.png') center/cover no-repeat;
+    z-index: 0;
+  }
+
+  .inv .header {
+    position: absolute; top: 50px; left: 0; right: 0;
+    text-align: center; z-index: 2;
+  }
+  .inv .header .sponsor {
+    display: inline-flex; align-items: center; gap: 28px;
+    padding: 12px 24px;
+    background: #FDEFE2;
+    border: 1px solid rgba(58, 46, 38, 0.08);
+    color: #3a2e26;
+    font-family: 'Noto Sans SC'; font-weight: 500;
+    font-size: 20px; letter-spacing: .25em;
+  }
+  .inv .header .sponsor .brand-huan {
+    font-family: 'Noto Serif SC', 'Noto Sans SC';
+    font-weight: 700; font-size: 30px;
+    color: #3a2e26; letter-spacing: .12em;
+    line-height: 52px;
+  }
+  .inv .header .sponsor .logo-onvo { height: 52px; width: auto; }
+  .inv .header .sponsor .tag {
+    color: #3a2e26;
+    padding-left: 20px;
+    border-left: 1px solid rgba(58, 46, 38, 0.3);
+    font-family: 'Noto Serif SC';
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: .2em;
+  }
+  .inv .header .title {
+    margin-top: 14px;
+    font-family: 'Noto Serif SC'; font-weight: 700;
+    font-size: 38px; color: #181818; letter-spacing: .12em;
+    text-shadow: 0 1px 2px rgba(255, 253, 247, 0.95);
+  }
+
+  .inv .invite-title {
+    position: absolute; top: 210px; left: 0; right: 0;
+    text-align: center; z-index: 2;
+    font-family: 'ZCOOL XiaoWei', 'Noto Serif SC';
+    font-weight: 900; font-size: 110px;
+    color: #CC3B26; letter-spacing: .2em;
+    text-shadow: 0 4px 12px rgba(204, 59, 38, 0.18), 0 2px 4px rgba(0, 0, 0, 0.12);
+  }
+  .inv .invite-en {
+    position: absolute; top: 340px; left: 0; right: 0;
+    text-align: center; z-index: 2;
+    font-family: 'Noto Serif SC'; font-weight: 400;
+    font-size: 28px; color: #4a3a2c; letter-spacing: .35em;
+  }
+  .inv .invite-en::before,
+  .inv .invite-en::after {
+    content: ""; display: inline-block;
+    width: 90px; height: 1px; background: #4a3a2c;
+    vertical-align: middle; margin: 0 22px;
+    opacity: 0.7;
+  }
+
+  .inv .panel {
+    position: absolute;
+    top: 410px; bottom: 400px;
+    left: 70px; right: 70px;
+    z-index: 2;
+    font-family: 'Noto Sans SC';
+    color: #181818;
+    text-shadow:
+      0 0 6px rgba(255, 253, 247, 0.9),
+      0 0 12px rgba(255, 253, 247, 0.7),
+      0 0 3px rgba(255, 253, 247, 1);
+  }
+  .inv .salutation {
+    font-size: 30px; font-weight: 500;
+    margin-bottom: 28px; letter-spacing: .08em;
+  }
+  .inv .salutation .recipient {
+    font-family: 'ZCOOL XiaoWei', 'Noto Serif SC';
+    color: #CC3B26; font-weight: 700;
+    font-size: 36px; margin: 0 10px;
+    vertical-align: -2px;
+  }
+  .inv .salutation .honorific { color: #4a3a2c; }
+
+  .inv .body-text {
+    font-size: 22px; line-height: 1.8;
+    letter-spacing: .04em; text-indent: 2em;
+    color: #2c2620; margin-bottom: 18px;
+    word-break: break-all; font-weight: 450;
+  }
+  .inv .body-text b { color: #B8351F; font-weight: 700; }
+
+  .inv .info-row {
+    display: flex; align-items: baseline;
+    font-size: 20px; line-height: 1.65;
+    margin-bottom: 6px;
+  }
+  .inv .info-row .label {
+    color: #6B4F3A; font-weight: 600;
+    width: 96px; margin-right: 28px; flex-shrink: 0;
+    display: inline-block;
+    text-align-last: justify; text-align: justify; text-justify: inter-character;
+    letter-spacing: 0;
+    border-left: 3px solid #B8351F;
+    padding-left: 14px; box-sizing: content-box;
+  }
+  .inv .info-row .value { flex: 1; color: #181818; letter-spacing: .06em; }
+
+  .inv .schedule { margin-top: 16px; padding-left: 133px; }
+  .inv .schedule .item {
+    display: flex; gap: 36px;
+    font-size: 19px; line-height: 1.75; color: #181818;
+  }
+  .inv .schedule .time {
+    font-family: 'Noto Sans SC'; color: #B8351F;
+    letter-spacing: .04em; min-width: 160px; font-weight: 500;
+  }
+  .inv .schedule .what { letter-spacing: .12em; font-weight: 500; color: #2c2620; }
+
+  .inv .signature {
+    position: absolute;
+    right: 70px; bottom: 55px;
+    text-align: right; z-index: 3;
+    font-family: 'Noto Sans SC'; font-size: 16px; font-weight: 500;
+    color: #181818; line-height: 2.0; letter-spacing: .08em;
+    text-shadow:
+      0 0 3px rgba(255, 253, 247, 1),
+      0 0 6px rgba(255, 253, 247, 1),
+      0 0 12px rgba(255, 253, 247, 1),
+      1px 1px 0 rgba(255, 253, 247, 0.9),
+      -1px -1px 0 rgba(255, 253, 247, 0.9);
+  }
+  .inv .signature .hosts { margin-bottom: 0; }
+  .inv .signature .org   { margin-bottom: 6px; }
+  .inv .signature .sponsor-line { color: #2a2018; font-size: 14px; font-weight: 500; letter-spacing: .05em; }
+  .inv .signature .date-line { color: #3a2e26; font-size: 13px; margin-top: 6px; letter-spacing: .3em; font-family: 'Noto Serif SC'; font-weight: 700; }
+
+  /* ---- 响应式 ---- */
+  @media (max-width: 1200px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #e8e4de; padding: 28px 24px; }
+    .preview-area { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <h1>
+      第七届&ldquo;校友京华杯&rdquo;围棋友谊赛
+      <small>邀请函在线生成</small>
+    </h1>
+
+    <div class="form-group">
+      <label>姓名</label>
+      <input type="text" id="input-name" placeholder="请输入嘉宾姓名" maxlength="10" autofocus>
+    </div>
+
+    <div class="form-group">
+      <label>赛区</label>
+      <select id="input-region">
+        <option value="beijing">北京赛区</option>
+        <option value="shanghai">上海赛区</option>
+        <option value="shenzhen">深圳赛区</option>
+      </select>
+    </div>
+
+    <button class="btn-download" id="btn-download" disabled>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      下载邀请函
+    </button>
+
+    <div class="footer-note">
+      主办：清华校友会总会 · 北京大学校友会<br>
+      承办：清华校友围棋社 · 北京大学校友围棋协会
+    </div>
+  </div>
+
+  <div class="preview-area">
+    <div class="preview-wrapper" id="preview-wrapper">
+      <div class="inv" id="invitation">
+        <div class="bg"></div>
+
+        <div class="header">
+          <div class="sponsor">
+            <span class="brand-huan">焕新教育</span>
+            <img class="logo-onvo" src="onvo-logo.png" alt="ONVO 乐道">
+            <span class="tag">特约</span>
+          </div>
+          <div class="title">第七届&ldquo;校友京华杯&rdquo;围棋友谊赛</div>
+        </div>
+
+        <div class="invite-title">邀请函</div>
+        <div class="invite-en">INVITATION</div>
+
+        <div class="panel">
+          <div class="salutation">
+            尊敬的
+            <span class="recipient" id="inv-name">___</span>
+            <span class="honorific">老师：</span>
+          </div>
+          <div class="body-text">
+            作为清华大学和北京大学两校校友的围棋盛会，<b>第七届校友京华杯围棋友谊赛</b><span id="inv-region">北京</span>赛区活动定于 <b>2026年5月16日</b> 举办，组委会诚邀您拨冗出席指导，期待您的光临！
+          </div>
+          <div class="info-row">
+            <div class="label">活动日期</div>
+            <div class="value">2026年5月16日（周六）</div>
+          </div>
+          <div class="info-row">
+            <div class="label">活动地点</div>
+            <div class="value" id="inv-venue">（请选择赛区）</div>
+          </div>
+          <div class="schedule">
+            <div class="item"><div class="time">09:00&ndash;09:30</div><div class="what">开幕式</div></div>
+            <div class="item"><div class="time">09:40&ndash;12:10</div><div class="what">第一轮比赛</div></div>
+            <div class="item"><div class="time">13:30&ndash;17:30</div><div class="what">第二轮比赛及表演赛</div></div>
+            <div class="item"><div class="time">17:30&ndash;18:00</div><div class="what">闭幕式及颁奖仪式</div></div>
+          </div>
+        </div>
+
+        <div class="signature">
+          <div class="hosts">主办：清华校友会总会 · 北京大学校友会</div>
+          <div class="org">承办：清华校友围棋社 · 北京大学校友围棋协会</div>
+          <div class="sponsor-line">特约赞助：北京焕新国际教育咨询有限公司</div>
+          <div class="sponsor-line">ONVO 乐道（蔚来旗下品牌）</div>
+          <div class="date-line">2026年5月</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const REGIONS = {
+  beijing:  { name: '北京', venue: '北京市海淀区科学院南路2号融科资讯中心B2层会议中心' },
+  shanghai: { name: '上海', venue: '上海市闵行区田林路888弄科技绿洲五期20号楼一楼蔚来中心' },
+  shenzhen: { name: '深圳', venue: '深圳市南山区丽水路2279号清华大学深圳国际研究生院C1-103、C1-104' },
+};
+
+const inputName   = document.getElementById('input-name');
+const inputRegion = document.getElementById('input-region');
+const btnDownload = document.getElementById('btn-download');
+const invName     = document.getElementById('inv-name');
+const invRegion   = document.getElementById('inv-region');
+const invVenue    = document.getElementById('inv-venue');
+
+function formatName(n) {
+  return n.length === 2 ? n[0] + '　' + n[1] : n;
+}
+
+function update() {
+  const name = inputName.value.trim();
+  const region = REGIONS[inputRegion.value];
+
+  invName.textContent = name ? formatName(name) : '___';
+  invRegion.textContent = region.name;
+  invVenue.textContent = region.venue;
+  btnDownload.disabled = !name;
+}
+
+function fitPreview() {
+  const area = document.querySelector('.preview-area');
+  const wrapper = document.getElementById('preview-wrapper');
+  const aw = area.clientWidth - 80;
+  const ah = area.clientHeight - 80;
+  const scale = Math.min(aw / 900, ah / 1273, 1);
+  wrapper.style.transform = `scale(${scale})`;
+}
+
+inputName.addEventListener('input', update);
+inputRegion.addEventListener('change', update);
+window.addEventListener('resize', fitPreview);
+
+btnDownload.addEventListener('click', async () => {
+  const name = inputName.value.trim();
+  if (!name) return;
+
+  btnDownload.disabled = true;
+  btnDownload.textContent = '生成中...';
+
+  try {
+    const el = document.getElementById('invitation');
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: null,
+      width: 900,
+      height: 1273,
+    });
+    const link = document.createElement('a');
+    link.download = `邀请函-${name}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (e) {
+    alert('生成失败，请重试');
+    console.error(e);
+  }
+
+  btnDownload.disabled = false;
+  btnDownload.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 下载邀请函';
+});
+
+update();
+fitPreview();
+</script>
+</body>
+</html>
