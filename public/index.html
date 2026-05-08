@@ -254,6 +254,20 @@ const REGIONS = {
   shenzhen: { name: '深圳', venue: '深圳市南山区丽水路2279号清华大学深圳国际研究生院C1-103、C1-104' },
 };
 
+// Preload images as data URIs for reliable html2canvas on mobile
+function imgToDataURI(url) {
+  return fetch(url).then(r => r.blob()).then(b => new Promise((resolve) => {
+    const rd = new FileReader();
+    rd.onloadend = () => resolve(rd.result);
+    rd.readAsDataURL(b);
+  }));
+}
+const preloaded = {};
+Promise.all([
+  imgToDataURI('onvo-logo.png').then(d => preloaded.logo = d),
+  imgToDataURI('bg.png').then(d => preloaded.bg = d),
+]).catch(() => {});
+
 const inputName   = document.getElementById('input-name');
 const inputRegion = document.getElementById('input-region');
 const btnDownload = document.getElementById('btn-download');
@@ -300,6 +314,17 @@ btnDownload.addEventListener('click', async () => {
     const offscreen = document.getElementById('offscreen');
     const clone = document.getElementById('invitation').cloneNode(true);
     clone.style.transform = 'none';
+
+    // Inject preloaded data URIs for reliable mobile rendering
+    if (preloaded.logo) {
+      const logoImg = clone.querySelector('.logo-onvo');
+      if (logoImg) logoImg.src = preloaded.logo;
+    }
+    if (preloaded.bg) {
+      const bgEl = clone.querySelector('.bg');
+      if (bgEl) bgEl.style.backgroundImage = `url('${preloaded.bg}')`;
+    }
+
     offscreen.appendChild(clone);
 
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -308,6 +333,7 @@ btnDownload.addEventListener('click', async () => {
     const canvas = await html2canvas(clone, {
       scale: dpr,
       useCORS: true,
+      allowTaint: true,
       backgroundColor: null,
       width: 900,
       height: 1273,
