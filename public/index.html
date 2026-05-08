@@ -302,8 +302,11 @@ btnDownload.addEventListener('click', async () => {
     clone.style.transform = 'none';
     offscreen.appendChild(clone);
 
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const dpr = isMobile ? 1 : 2;
+
     const canvas = await html2canvas(clone, {
-      scale: 2,
+      scale: dpr,
       useCORS: true,
       backgroundColor: null,
       width: 900,
@@ -314,10 +317,17 @@ btnDownload.addEventListener('click', async () => {
 
     offscreen.removeChild(clone);
 
-    const link = document.createElement('a');
-    link.download = `邀请函-${name}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    canvas.toBlob(function(blob) {
+      if (!blob) { alert('生成失败，请重试'); return; }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = `邀请函-${name}.png`;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+    }, 'image/png');
   } catch (e) {
     alert('生成失败，请重试');
     console.error(e);
